@@ -168,7 +168,7 @@ fun AnalisisMinutaScreen(
             }
             Tarjeta(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(12.dp)) {
-                    Text("Comidas potentes (≥600 kcal)")
+                    Text("Comidas muy calóricas (≥600 kcal)")
                     val lista = if (potentes.isEmpty()) "—" else potentes.joinToString { it.descripcion }
                     Text(lista)
                 }
