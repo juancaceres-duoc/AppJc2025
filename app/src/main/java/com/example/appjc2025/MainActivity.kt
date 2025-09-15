@@ -8,12 +8,14 @@ import androidx.compose.runtime.*
 import com.example.appjc2025.ui.theme.AppJc2025Theme
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.appjc2025.composable.AppNav
+import com.example.appjc2025.utils.RegisterHelper
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
+            RegisterHelper.guardarRegistro("juan", "juan@juan.cl", "juan123")
             AppNav()
         }
     }

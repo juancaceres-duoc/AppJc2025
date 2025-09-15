@@ -1,4 +1,4 @@
-package com.example.appjc2025.interfaces
+package com.example.appjc2025.screens
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement

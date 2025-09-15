@@ -1,4 +1,4 @@
-package com.example.appjc2025.interfaces
+package com.example.appjc2025.screens
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
