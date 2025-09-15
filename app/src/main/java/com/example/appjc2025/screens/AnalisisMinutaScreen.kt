@@ -12,7 +12,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.appjc2025.model.PlanDia
-import com.example.appjc2025.model.RegistroComida
 import com.example.appjc2025.ui.theme.AppThemeType
 import com.example.appjc2025.utils.Tarjeta
 
@@ -32,10 +31,6 @@ fun Int.clasificacion(): String = when {
 // Propiedad de extensión
 val Int.esExcesivo: Boolean
     get() = this > 3000
-
-// Extensión útil al dominio: kcal promedio de una lista
-fun List<RegistroComida>.kcalPromedio(): Int =
-    if (isEmpty()) 0 else (sumOf { it.kcal } / size)
 
 @Composable
 fun AnalisisMinutaScreen(
