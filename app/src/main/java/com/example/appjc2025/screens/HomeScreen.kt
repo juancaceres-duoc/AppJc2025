@@ -35,6 +35,8 @@ fun HomeScreen(
     val fechaTexto = remember { FechaHelper.fechaTexto(FechaHelper.hoy()) }
     var plan by remember { mutableStateOf(PlanDia()) }
     var edit by rememberSaveable { mutableStateOf<EditState?>(null) }
+    var mostrarDialogoMetas by remember { mutableStateOf(false) }
+
     val kcalTotales by remember(plan) {
         derivedStateOf { plan.comidas.values.flatten().sumOf { it.kcal } }
     }
@@ -103,11 +105,25 @@ fun HomeScreen(
                         Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Text(
-                            "Resumen del día",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                "Resumen del día",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Spacer(Modifier.weight(1f))
+                            val coloresTextoPrimario = ButtonDefaults.textButtonColors(
+                                contentColor = Purple40,
+                                disabledContentColor = Purple40.copy(alpha = 0.38f)
+                            )
+                            TextButton(onClick = { mostrarDialogoMetas = true }, colors = coloresTextoPrimario) {
+                                Text("Metas")
+                            }
+                        }
+
                         Text(
                             "Kcal totales: $kcalTotales / ${plan.metaKcal}",
                             style = MaterialTheme.typography.bodyLarge
@@ -119,6 +135,11 @@ fun HomeScreen(
                         Text(
                             tip,
                             style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            "Meta de agua: ${plan.metaAgua} vasos",
+                            style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -177,6 +198,18 @@ fun HomeScreen(
                     RegistroComida(id = id, descripcion = descripcion, kcal = kcal)
                 )
                 edit = null
+            }
+        )
+    }
+
+    if (mostrarDialogoMetas) {
+        DialogoMetas(
+            metaAguaInicial = plan.metaAgua,
+            metaKcalInicial = plan.metaKcal,
+            onCerrar = { mostrarDialogoMetas = false },
+            onConfirmar = { nuevaAgua, nuevaKcal ->
+                plan = plan.copy(metaAgua = nuevaAgua, metaKcal = nuevaKcal)
+                mostrarDialogoMetas = false
             }
         )
     }
@@ -314,6 +347,83 @@ private fun DialogoAgregarEditarComida(
                     ) {
                         Text("Guardar")
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DialogoMetas(
+    metaAguaInicial: Int,
+    metaKcalInicial: Int,
+    onCerrar: () -> Unit,
+    onConfirmar: (metaAgua: Int, metaKcal: Int) -> Unit
+) {
+    var aguaTexto by rememberSaveable { mutableStateOf(metaAguaInicial.toString()) }
+    var kcalTexto by rememberSaveable { mutableStateOf(metaKcalInicial.toString()) }
+    var error by remember { mutableStateOf<String?>(null) }
+
+    Dialog(
+        onDismissRequest = onCerrar,
+        properties = DialogProperties(usePlatformDefaultWidth = true)
+    ) {
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+            colors = CardDefaults.cardColors(
+                containerColor = Color.White,
+                contentColor = MaterialTheme.colorScheme.onSurface
+            ),
+            elevation = CardDefaults.cardElevation(0.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text("Configurar metas", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = Color(0xFF111111))
+
+                OutlinedTextField(
+                    value = aguaTexto,
+                    onValueChange = { aguaTexto = it.filter { ch -> ch.isDigit() } },
+                    label = { Text("Meta de agua (vasos)") },
+                    singleLine = true,
+                    textStyle = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = kcalTexto,
+                    onValueChange = { kcalTexto = it.filter { ch -> ch.isDigit() } },
+                    label = { Text("Meta de calorías (kcal)") },
+                    singleLine = true,
+                    textStyle = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                error?.let {
+                    Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                }
+
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                    val coloresTextoPrimario = ButtonDefaults.textButtonColors(
+                        contentColor = Purple40,
+                        disabledContentColor = Purple40.copy(alpha = 0.38f)
+                    )
+                    TextButton(onClick = onCerrar, colors = coloresTextoPrimario) { Text("Cancelar") }
+                    Spacer(Modifier.width(8.dp))
+                    TextButton(
+                        onClick = {
+                            val agua = aguaTexto.toIntOrNull()
+                            val kcal = kcalTexto.toIntOrNull()
+                            when {
+                                agua == null || agua !in 1..20 -> error = "Agua: ingresa un valor entre 1 y 20."
+                                kcal == null || kcal !in 800..5000 -> error = "Calorías: ingresa entre 800 y 5000."
+                                else -> onConfirmar(agua, kcal)
+                            }
+                        },
+                        colors = coloresTextoPrimario
+                    ) { Text("Guardar") }
                 }
             }
         }

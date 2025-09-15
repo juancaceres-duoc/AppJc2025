@@ -10,6 +10,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.appjc2025.Routes
+import com.example.appjc2025.model.PlanDia
 import com.example.appjc2025.screens.*
 import com.example.appjc2025.ui.theme.AppJc2025Theme
 import com.example.appjc2025.ui.theme.AppThemeType
