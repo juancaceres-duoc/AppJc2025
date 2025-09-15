@@ -12,10 +12,13 @@ object FechaHelper {
     fun hoy(): String = isoFormatter().format(Date())
 
     fun fechaTexto(fechaIso: String, locale: Locale = localeEsCl): String {
-        val date = runCatching { isoFormatter().parse(fechaIso) }.getOrNull() ?: Date()
-        val txt = largoFormatter(locale).format(date)
-        return txt.replaceFirstChar { ch ->
-            if (ch.isLowerCase()) ch.titlecase(locale) else ch.toString()
+        val date = try {
+            isoFormatter().parse(fechaIso)
+        } catch (_: Exception) {
+            Date()
         }
+        return largoFormatter(locale)
+            .format(date)
+            .replaceFirstChar { it.titlecase(locale) }
     }
 }

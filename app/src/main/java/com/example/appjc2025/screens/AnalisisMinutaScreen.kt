@@ -22,14 +22,14 @@ fun operar(valor: Int, op: (Int) -> Int): Int = op(valor)
 // Función inline
 inline fun evaluarInline(kcal: Int, cond: (Int) -> Boolean): Boolean = cond(kcal)
 
-// Función de extensión sobre Int
+// Función de extensión
 fun Int.clasificacion(): String = when {
     this < 1500 -> "Baja"
     this in 1500..2500 -> "Adecuada"
     else -> "Excesiva"
 }
 
-// Propiedad de extensión sobre Int
+// Propiedad de extensión
 val Int.esExcesivo: Boolean
     get() = this > 3000
 
@@ -46,26 +46,44 @@ fun AnalisisMinutaScreen(
 ) {
     val todas = plan.comidas.values.flatten()
     val totalKcal = todas.sumOf { it.kcal }
-    val doble = operar(totalKcal) { it * 2 }
-    val esAdecuado = evaluarInline(totalKcal) { it in 1500..2500 }
+
+    //Uso de función de orden superior
+    val diferenciaVsMeta = operar(totalKcal) { it - plan.metaKcal }
+
+    //Uso de función Inline
+    val dentroDeRango = evaluarInline(totalKcal) {
+        it in (plan.metaKcal - 200)..(plan.metaKcal + 200)
+    }
+
+    //Extensión
     val clasif = totalKcal.clasificacion()
     val excesivo = totalKcal.esExcesivo
 
-    // Ejemplos con colecciones reales
+
+    // Filter
     val livianos = todas.filter { it.kcal < 200 }
-    val mensajeEtiqueta = buildString {
-        listOf(500, 1000, 2000, 3000).forEach etiqueta@{ ref ->
-            if (ref > totalKcal) return@etiqueta
-            append("✔ $ref ")
+    val potentes = todas.filter { it.kcal >= 600 }
+
+    //Lambda con etiqueta
+    val hitos = listOf(0.25f, 0.5f, 0.75f, 1.0f)
+    val progresoHitos = buildString {
+        hitos.forEach etiqueta@{ h ->
+            val paso = (plan.metaKcal * h).toInt()
+            if (totalKcal < paso) return@etiqueta
+            append("✔ ${paso}kcal ")
         }
-    }
+    }.ifBlank { "—" }
 
     // Manejo de errores
-    val divisionSegura = try {
-        totalKcal / (todas.size - todas.size)
+    val promedioSeguro = try {
+        totalKcal / todas.size
     } catch (e: ArithmeticException) {
-        "Error: ${e.message}"
+        0
     }
+
+    val mayor = todas.maxByOrNull { it.kcal }
+    val menor = todas.minByOrNull { it.kcal }
+    val hidratacionOk = evaluarInline(plan.agua) { it >= plan.metaAgua }
 
     Scaffold(
         topBar = {
@@ -92,71 +110,76 @@ fun AnalisisMinutaScreen(
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.SemiBold
             )
+
             Tarjeta(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(
-                        "Total calorías del día: $totalKcal kcal",
-                        style = MaterialTheme.typography.bodyLarge
-                    )
+                    Text("Total del día: $totalKcal kcal", style = MaterialTheme.typography.bodyLarge)
                     Text("Ítems registrados: ${todas.size}")
+                    Text("Meta kcal: ${plan.metaKcal} | Meta agua: ${plan.metaAgua} vasos")
+                    Text("Agua bebida: ${plan.agua} vasos (${if (hidratacionOk) "cumplida" else "pendiente"})")
                 }
             }
 
             Tarjeta(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(12.dp)) {
-                    Text("Función de orden superior")
-                    Text("Doble del total: $doble")
+                    Text("Orden superior (operar)")
+                    val msg = when {
+                        diferenciaVsMeta > 0 -> "Sobre la meta por +${diferenciaVsMeta} kcal"
+                        diferenciaVsMeta < 0 -> "Bajo la meta por ${-diferenciaVsMeta} kcal"
+                        else -> "Exactamente en la meta"
+                    }
+                    Text(msg)
                 }
             }
 
             Tarjeta(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(12.dp)) {
-                    Text("Función inline")
-                    Text("¿Total adecuado (1500–2500)? $esAdecuado")
+                    Text("Función inline (evaluarInline)")
+                    Text("¿Dentro de ±200 kcal de la meta? $dentroDeRango")
                 }
             }
 
             Tarjeta(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(12.dp)) {
-                    Text("Lambda con etiqueta")
-                    Text("Valores procesados: $mensajeEtiqueta")
+                    Text("Lambda con etiqueta (hitos hacia la meta)")
+                    Text(progresoHitos)
                 }
             }
 
             Tarjeta(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(12.dp)) {
-                    Text("Función de extensión (Int.clasificacion)")
-                    Text("Clasificación: $clasif")
+                    Text("Extensión (Int.clasificacion)")
+                    Text("Clasificación fija: $clasif")
                 }
             }
-
             Tarjeta(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(12.dp)) {
                     Text("Propiedad de extensión (Int.esExcesivo)")
-                    Text("¿Es excesivo (>3000)? $excesivo")
+                    Text("¿Excesivo (>3000 kcal)? $excesivo")
                 }
             }
 
             Tarjeta(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(12.dp)) {
-                    Text("Filter sobre comidas reales (<200 kcal)")
-                    val lista =
-                        if (livianos.isEmpty()) "—" else livianos.joinToString { it.descripcion }
-                    Text("Livianos: $lista")
+                    Text("Comidas livianas (<200 kcal)")
+                    val lista = if (livianos.isEmpty()) "—" else livianos.joinToString { it.descripcion }
+                    Text(lista)
+                }
+            }
+            Tarjeta(Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(12.dp)) {
+                    Text("Comidas potentes (≥600 kcal)")
+                    val lista = if (potentes.isEmpty()) "—" else potentes.joinToString { it.descripcion }
+                    Text(lista)
                 }
             }
 
             Tarjeta(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(12.dp)) {
-                    Text("Promedio (extensión de lista)")
-                    Text("kcal promedio por ítem: ${todas.kcalPromedio()} kcal")
-                }
-            }
-
-            Tarjeta(Modifier.fillMaxWidth()) {
-                Column(Modifier.padding(12.dp)) {
-                    Text("Manejo de errores (try/catch)")
-                    Text(divisionSegura.toString())
+                    Text("Promedio y extremos")
+                    Text("Promedio seguro: $promedioSeguro kcal/ítem")
+                    Text("Mayor: ${mayor?.let { "${it.descripcion} (${it.kcal} kcal)" } ?: "—"}")
+                    Text("Menor: ${menor?.let { "${it.descripcion} (${it.kcal} kcal)" } ?: "—"}")
                 }
             }
         }

@@ -41,7 +41,10 @@ fun HomeScreen(
         derivedStateOf { plan.comidas.values.flatten().sumOf { it.kcal } }
     }
     val avance by remember(plan, kcalTotales) {
-        derivedStateOf { (kcalTotales.toFloat() / plan.metaKcal).coerceIn(0f, 1f) }
+        derivedStateOf {
+            val p = if (plan.metaKcal <= 0) 0f else kcalTotales.toFloat() / plan.metaKcal
+            if (p < 0f) 0f else if (p > 1f) 1f else p
+        }
     }
     val tip by remember(plan, kcalTotales) {
         derivedStateOf {
@@ -55,22 +58,42 @@ fun HomeScreen(
     }
 
     fun agregarOEditarComida(tipo: TipoComida, reg: RegistroComida) {
-        val prev = plan.comidas[tipo].orEmpty()
-        val nueva = if (prev.any { it.id == reg.id }) {
-            prev.map { if (it.id == reg.id) reg else it }
-        } else {
-            prev + reg
+        val anterior = plan.comidas[tipo].orEmpty()
+        val nueva = mutableListOf<RegistroComida>()
+        var reemplazado = false
+
+        for (item in anterior) {
+            if (item.id == reg.id) {
+                nueva.add(reg)
+                reemplazado = true
+            } else {
+                nueva.add(item)
+            }
         }
+        if (!reemplazado) {
+            nueva.add(reg)
+        }
+
         plan = plan.copy(comidas = plan.comidas + (tipo to nueva))
     }
 
     fun quitarComida(tipo: TipoComida, id: String) {
-        val nueva = plan.comidas[tipo].orEmpty().filterNot { it.id == id }
+        val anterior = plan.comidas[tipo].orEmpty()
+        val nueva = mutableListOf<RegistroComida>()
+
+        for (item in anterior) {
+            if (item.id != id) {
+                nueva.add(item)
+            }
+        }
         plan = plan.copy(comidas = plan.comidas + (tipo to nueva))
     }
 
+
     fun cambiarAgua(delta: Int) {
-        plan = plan.copy(agua = (plan.agua + delta).coerceIn(0, plan.metaAgua))
+        val nuevo = plan.agua + delta
+        val acotado = if (nuevo < 0) 0 else if (nuevo > plan.metaAgua) plan.metaAgua else nuevo
+        plan = plan.copy(agua = acotado)
     }
 
     Scaffold(
@@ -119,7 +142,10 @@ fun HomeScreen(
                                 contentColor = Purple40,
                                 disabledContentColor = Purple40.copy(alpha = 0.38f)
                             )
-                            TextButton(onClick = { mostrarDialogoMetas = true }, colors = coloresTextoPrimario) {
+                            TextButton(
+                                onClick = { mostrarDialogoMetas = true },
+                                colors = coloresTextoPrimario
+                            ) {
                                 Text("Metas")
                             }
                         }
@@ -318,7 +344,11 @@ private fun DialogoAgregarEditarComida(
                 )
 
                 error?.let {
-                    Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                    Text(
+                        it,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
                 }
 
                 Row(
@@ -340,6 +370,7 @@ private fun DialogoAgregarEditarComida(
                                 descripcion.isBlank() -> error = "Ingresa una descripción."
                                 kcal == null || kcal <= 0 || kcal > 2500 ->
                                     error = "Ingresa calorías válidas (1–2500)."
+
                                 else -> onConfirmar(descripcion.trim(), kcal)
                             }
                         },
@@ -381,7 +412,12 @@ private fun DialogoMetas(
                 modifier = Modifier.padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text("Configurar metas", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = Color(0xFF111111))
+                Text(
+                    "Configurar metas",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF111111)
+                )
 
                 OutlinedTextField(
                     value = aguaTexto,
@@ -402,7 +438,11 @@ private fun DialogoMetas(
                 )
 
                 error?.let {
-                    Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                    Text(
+                        it,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
                 }
 
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
@@ -410,15 +450,22 @@ private fun DialogoMetas(
                         contentColor = Purple40,
                         disabledContentColor = Purple40.copy(alpha = 0.38f)
                     )
-                    TextButton(onClick = onCerrar, colors = coloresTextoPrimario) { Text("Cancelar") }
+                    TextButton(
+                        onClick = onCerrar,
+                        colors = coloresTextoPrimario
+                    ) { Text("Cancelar") }
                     Spacer(Modifier.width(8.dp))
                     TextButton(
                         onClick = {
                             val agua = aguaTexto.toIntOrNull()
                             val kcal = kcalTexto.toIntOrNull()
                             when {
-                                agua == null || agua !in 1..20 -> error = "Agua: ingresa un valor entre 1 y 20."
-                                kcal == null || kcal !in 800..5000 -> error = "Calorías: ingresa entre 800 y 5000."
+                                agua == null || agua !in 1..20 -> error =
+                                    "Agua: ingresa un valor entre 1 y 20."
+
+                                kcal == null || kcal !in 800..5000 -> error =
+                                    "Calorías: ingresa entre 800 y 5000."
+
                                 else -> onConfirmar(agua, kcal)
                             }
                         },
