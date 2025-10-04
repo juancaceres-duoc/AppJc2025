@@ -29,6 +29,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import com.example.appjc2025.data.DBHelper
 import com.example.appjc2025.ui.theme.AppThemeType
 import com.example.appjc2025.utils.RegisterHelper
 import com.example.appjc2025.utils.RegisterHelper.registros
@@ -118,12 +119,22 @@ fun RegisterScreen(
                 ) {
                     Button(
                         onClick = {
-                            RegisterHelper.guardarRegistro(nombre, correo, password)
-                            Toast.makeText(
-                                context,
-                                "Datos guardados correctamente. Total registros: ${registros.size}",
-                                Toast.LENGTH_LONG
-                            ).show()
+                            DBHelper.guardarRegistro(context,nombre, correo, password){
+                                res ->
+                                if (res.ok){
+                                    Toast.makeText(
+                                        context,
+                                        "Datos guardados correctamente. Total registros: ${registros.size}",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                }else{
+                                    Toast.makeText(
+                                        context,
+                                        res.errores.joinToString("\n"),
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                }
+                            }
                             onBack()
                         },
                         modifier = Modifier.fillMaxWidth()

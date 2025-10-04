@@ -33,6 +33,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.appjc2025.composable.ThemedLogo
+import com.example.appjc2025.data.DBHelper
 import com.example.appjc2025.ui.theme.AppThemeType
 import com.example.appjc2025.utils.RegisterHelper
 
@@ -127,13 +128,15 @@ fun LoginApp(
                             Toast.makeText(context, "Ingresa tu correo y contraseña", Toast.LENGTH_LONG).show()
                             return@Button
                         }else {
-                            val res = RegisterHelper.autenticar(u, p)
-                            if (res.ok) {
-                                onLoginSuccess()
-                            } else {
-                                val msg = res.mensaje?.trim().takeUnless { it.isNullOrEmpty() }
-                                    ?: "Credenciales inválidas"
-                                Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+                            DBHelper.autenticar(context,u, p){
+                                res ->
+                                if (res.ok) {
+                                    onLoginSuccess()
+                                } else {
+                                    val msg = res.mensaje?.trim().takeUnless { it.isNullOrEmpty() }
+                                        ?: "Credenciales inválidas"
+                                    Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+                                }
                             }
                         }
                     },
