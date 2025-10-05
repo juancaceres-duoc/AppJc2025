@@ -15,7 +15,6 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            RegisterHelper.guardarRegistro("juan", "juan@juan.cl", "juan123")
             AppNav()
         }
     }

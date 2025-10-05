@@ -63,5 +63,9 @@ dependencies {
     implementation("androidx.room:room-runtime:2.8.0")
     kapt("androidx.room:room-compiler:2.8.0")
     implementation("androidx.room:room-ktx:2.8.0")
+    testImplementation(libs.junit)
+    testImplementation(libs.mockito.core)
+    testImplementation(libs.mockito.kotlin)
+
 
 }
