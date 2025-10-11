@@ -1,5 +1,7 @@
 package com.example.appjc2025.screens
 
+import android.R
+import android.content.Context
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -11,6 +13,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -32,6 +35,7 @@ fun HomeScreen(
     onBack: () -> Unit,
     onIrAnalisis: (PlanDia) -> Unit
 ) {
+    val context = LocalContext.current
     val fechaTexto = remember { FechaHelper.fechaTexto(FechaHelper.hoy()) }
     var plan by remember { mutableStateOf(PlanDia()) }
     var edit by rememberSaveable { mutableStateOf<EditState?>(null) }
@@ -55,6 +59,10 @@ fun HomeScreen(
                 else -> "Dentro de rango."
             }
         }
+    }
+    val userName = remember{
+        context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+            .getString("nombre", null).orEmpty()
     }
 
     fun agregarOEditarComida(tipo: TipoComida, reg: RegistroComida) {
@@ -115,6 +123,11 @@ fun HomeScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item {
+                Text(
+                    text="Hola, ${if (userName.isBlank()) "usuario" else userName}",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
                 Text(
                     fechaTexto,
                     style = MaterialTheme.typography.labelLarge,
