@@ -124,7 +124,7 @@ fun RegisterScreen(
                                 if (res.ok){
                                     Toast.makeText(
                                         context,
-                                        "Datos guardados correctamente. Total registros: ${registros.size}",
+                                        "Datos guardados correctamente.",
                                         Toast.LENGTH_LONG
                                     ).show()
                                 }else{
